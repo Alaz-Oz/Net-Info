@@ -74,7 +74,7 @@ class NetworkMonitor {
     func formatSpeed(_ bytesPerSecond: UInt64) -> String {
 
         if bytesPerSecond > 1024 * 1024 {
-            return String(format: "%3d MB/s", bytesPerSecond / 1024 * 1024)
+            return String(format: "%.2f MB/s", Double(bytesPerSecond) / (1024 * 1024))
         } else if bytesPerSecond > 1024 {
             return String(format: "%3d KB/s", bytesPerSecond / 1024)
         }
