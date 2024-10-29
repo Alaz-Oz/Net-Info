@@ -11,8 +11,8 @@ class NetworkMonitor {
     static let shared = NetworkMonitor()
     private var timer: Timer?
 
-    private var previousUpload: UInt64 = 0
-    private var previousDownload: UInt64 = 0
+    private var previousUpload: UInt32 = 0
+    private var previousDownload: UInt32 = 0
 
     func startMonitoring(
         callback: @escaping (_ uploadSpeed: String, _ downloadSpeed: String) ->
@@ -43,10 +43,10 @@ class NetworkMonitor {
         }
     }
 
-    func getNetworkData() -> (UInt64, UInt64) {
+    func getNetworkData() -> (UInt32, UInt32) {
         var interfaceAddresses: UnsafeMutablePointer<ifaddrs>? = nil
-        var upload: UInt64 = 0
-        var download: UInt64 = 0
+        var upload: UInt32 = 0
+        var download: UInt32 = 0
 
         // Get network interfaces
         if getifaddrs(&interfaceAddresses) == 0 {
@@ -61,8 +61,8 @@ class NetworkMonitor {
                 if name == "en0", let ifaData = interface.ifa_data {
                     let data = ifaData.assumingMemoryBound(to: if_data.self)
                         .pointee
-                    upload += UInt64(data.ifi_obytes)
-                    download += UInt64(data.ifi_ibytes)
+                    upload += data.ifi_obytes
+                    download += data.ifi_ibytes
                 }
             }
             freeifaddrs(interfaceAddresses)
@@ -71,10 +71,10 @@ class NetworkMonitor {
         return (upload, download)
     }
     // Helper function to format speed with units
-    func formatSpeed(_ bytesPerSecond: UInt64) -> String {
+    func formatSpeed(_ bytesPerSecond: UInt32) -> String {
 
         if bytesPerSecond > 1024 * 1024 {
-            return String(format: "%.2f MB/s", Double(bytesPerSecond) / (1024 * 1024))
+            return String(format: "%.2f MB/s", Float(bytesPerSecond) / (1024 * 1024))
         } else if bytesPerSecond > 1024 {
             return String(format: "%3d KB/s", bytesPerSecond / 1024)
         }
