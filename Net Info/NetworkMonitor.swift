@@ -27,8 +27,10 @@ class NetworkMonitor {
             let (upload, download) = self.getNetworkData()
 
             // Calculate upload and download speeds in bytes per second
-            let uploadBytesPerSecond = upload - self.previousUpload
-            let downloadBytesPerSecond = download - self.previousDownload
+            let uploadBytesPerSecond = self.getGap(
+                curr: upload, pre: self.previousUpload)
+            let downloadBytesPerSecond = self.getGap(
+                curr: download, pre: self.previousDownload)
 
             // Update previous values for next calculation
             self.previousUpload = upload
@@ -41,6 +43,12 @@ class NetworkMonitor {
             // Pass formatted strings to the callback
             callback(uploadSpeed, downloadSpeed)
         }
+    }
+    func getGap(curr: UInt32, pre: UInt32) -> UInt32 {
+        if curr < pre {
+            return UINT32_MAX - pre + curr
+        }
+        return curr - pre
     }
 
     func getNetworkData() -> (UInt32, UInt32) {
