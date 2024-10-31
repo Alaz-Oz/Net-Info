@@ -14,8 +14,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Set up Xcode
-        run: xcode-select --switch /Applications/Xcode.app/Contents/Developer
+      # - name: Set up Xcode
+        # run: xcode-select --switch /Applications/Xcode.app/Contents/Developer
       - name: Install dependencies 
         run: swift package resolve
       - name: Build project
