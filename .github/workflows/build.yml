@@ -54,7 +54,8 @@ jobs:
         run: xcodebuild -scheme "Net Info" -configuration Release -archivePath ./build/App.xcarchive archive
 
       - name: Export app
-        run: xcodebuild -exportArchive -archivePath ./build/App.xcarchive -exportOptionsPlist ExportOptions.plist -exportPath ./build
+        # run: xcodebuild -exportArchive -archivePath ./build/App.xcarchive -exportOptionsPlist ExportOptions.plist -exportPath ./build
+        run: xcodebuild -exportArchive -archivePath ./build/App.xcarchive -exportPath ./build -allowProvisioningUpdates CODE_SIGN_IDENTITY="Afroz's Macbook Air"
 
       # - name: Upload build artifact
       #   uses: actions/upload-artifact@v3
