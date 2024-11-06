@@ -54,7 +54,7 @@ jobs:
         run: xcodebuild -scheme "Net Info" -configuration Release -archivePath ./build/App.xcarchive archive
       - name: Export app
         run: |
-          cp -R ./build/App.xcarchive/Products/Applications/*.app ./build/*.app
+          cp -R ./build/App.xcarchive/Products/Applications/*.app ./build/
           zip -r ./build/ExportedApp.zip ./build/*.app
 
       
