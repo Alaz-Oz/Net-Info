@@ -52,16 +52,20 @@ jobs:
         # run: xcode-select --switch /Applications/Xcode.app/Contents/Developer
       - name: Build project
         run: xcodebuild -scheme "Net Info" -configuration Release -archivePath ./build/App.xcarchive archive
-
       - name: Export app
-        # run: xcodebuild -exportArchive -archivePath ./build/App.xcarchive -exportOptionsPlist ExportOptions.plist -exportPath ./build
-        run: xcodebuild -exportArchive -archivePath ./build/App.xcarchive -exportPath ./build -allowProvisioningUpdates CODE_SIGN_IDENTITY="Afroz's Macbook Air"
+        run: |
+          cp -R ./build/App.xcarchive/Products/Applications/*.app ./build/*.app
+          zip -r ./build/ExportedApp.zip ./build/*.app
 
-      # - name: Upload build artifact
-      #   uses: actions/upload-artifact@v3
-      #   with:
-      #     name: app-build
-      #     path: ./build # Change this path to your final app path
+      
+      # - name: Export app
+      #   run: xcodebuild -exportArchive -archivePath ./build/App.xcarchive -exportOptionsPlist ExportOptions.plist -exportPath ./build
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: app-build
+          path: ./build
 
       # - name: Publish release
       #   uses: softprops/action-gh-release@v1
