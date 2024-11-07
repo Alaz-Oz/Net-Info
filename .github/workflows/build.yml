@@ -48,25 +48,20 @@ jobs:
           # apply provisioning profile
           # mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           # cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles
-      # - name: Set up Xcode
-        # run: xcode-select --switch /Applications/Xcode.app/Contents/Developer
+
       - name: Build project
         run: xcodebuild -scheme "Net Info" -configuration Release -archivePath ./build/App.xcarchive archive
+
       - name: Export app
         run: |
           cp -R ./build/App.xcarchive/Products/Applications/*.app ./build/
-          zip -r ./build/ExportedApp.zip ./build/*.app
+          # zip -r ./build/ExportedApp.zip ./build/*.app
 
-      # - name: Upload build artifact
-      #   uses: actions/upload-artifact@v3
-      #   with:
-      #     name: app-build
-      #     path: ./build
       - name: Upload a Build Artifact
         uses: actions/upload-artifact@v4.4.3
         with:
           name: AppFolder
-          path: ./build
+          path: ./build/*.app
           include-hidden-files: true
 
 
