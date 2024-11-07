@@ -1,0 +1,43 @@
+name: Release
+
+on:
+  workflow_run:
+    workflows: ["Xcode Build App"]
+    types:
+      - completed
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }} # Runs only if 'build.yml' succeeded
+
+    steps:
+      # Download artifact from the build job
+      - name: Download Build Artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: artifact
+          path: ./build
+
+      # Step 2: Create a Release
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: "v1.0.0" # Replace with your desired tag or make it dynamic
+          release_name: "Release v1.0.0" # Replace with the release name
+          draft: true
+          prerelease: true
+
+      # Step 3: Upload Artifact to Release
+      - name: Upload Artifact to Release
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          release_id: ${{ steps.create_release.outputs.id }}
+          asset_path: ./build/*.zip  # Adjust if needed
+          asset_name: release.zip  # Name of the release asset
+          asset_content_type: application/zip
