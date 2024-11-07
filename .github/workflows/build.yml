@@ -1,4 +1,4 @@
-name: Xcode - Build and Analyze
+name: Xcode Build App
 
 on:
   push:
@@ -60,18 +60,5 @@ jobs:
       - name: Upload a Build Artifact
         uses: actions/upload-artifact@v4.4.3
         with:
-          name: AppFolder
           path: ./build/*.app
           include-hidden-files: true
-
-
-
-
-          
-      # - name: Publish release
-      #   uses: softprops/action-gh-release@v1
-      #   with:
-      #     files: ./build/*.app # Adjust this if the output is different
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
