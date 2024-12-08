@@ -57,10 +57,16 @@ jobs:
         run: |
           cp -R ./build/App.xcarchive/Products/Applications/*.app ./build/
 
+      - name: Zip Artifacts
+        run: |
+          mkdir -p build/net_info
+          cp -r ./build/*.app ./build/net_info/
+          zip -r bin/net_info.zip bin/net_info
+
       - name: Upload a Build Artifact
         uses: actions/upload-artifact@v4.4.3
         with:
-          path: ./build/*.app
+          path: ./build/*.zip
           include-hidden-files: true
   release:
     needs: build
