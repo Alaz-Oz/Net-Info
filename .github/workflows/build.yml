@@ -61,7 +61,7 @@ jobs:
         run: |
           mkdir -p build/net_info
           cp -r ./build/*.app ./build/net_info/
-          zip -r bin/net_info.zip bin/net_info
+          zip -r build/net_info.zip build/net_info
 
       - name: Upload a Build Artifact
         uses: actions/upload-artifact@v4.4.3
