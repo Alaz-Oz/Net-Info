@@ -51,7 +51,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         
         // Show the window
         visualizeWindow?.makeKeyAndOrderFront(nil)
-        NSApp.activate()
+        if #available(macOS 14.0, *) {
+            NSApp.activate()
+        } else {
+            NSApp.activate(ignoringOtherApps: true)
+        }
         
     }
 
