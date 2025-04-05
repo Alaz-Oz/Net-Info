@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Charts
 
 struct ContentView: View {
     let buffer = NetworkMonitor.shared.buffer
@@ -19,71 +20,43 @@ struct ContentView: View {
                     .font(.headline)
                     .padding()
             }
-            // Refresh the LineChartView per second
-            LineChartView(data: NetworkMonitor.shared.buffer)
-                .frame(height: 200)
-                .padding()
-                .refreshable {
 
-                }
+            ChartView(data: NetworkMonitor.shared.buffer)
             Spacer()
         }
         .padding()
     }
 }
 
-struct LineChartView: View {
+struct ChartView: View {
     @ObservedObject var data: NetworkSpeedBuffer
+
     var body: some View {
-        Canvas { context, size in
-            
-            var uploadPath = Path()
-            var downloadPath = Path()
+        Chart {
+            ForEach(Array(data.enumerated()), id: \.offset) { index, speed in
+                LineMark(
+                    x: .value("Second", index),
+                    y: .value("Speed", speed.0)
+                )
+                .foregroundStyle(.red)
+                .symbol(by: .value("Type", "Upload"))
+                .symbolSize(0)
 
-            let width: CGFloat = 600
-            let count = 60 // no. of element in that
-            let spacing: CGFloat = width / CGFloat(count - 1)
-            let height: CGFloat = 200
-            var maxDataValue: CGFloat = 7 * 1024  // initial assumption: 7KB
-            for (_, (upload, download)) in data.enumerated() {
-                let value = CGFloat(max(upload, download))
-                if value > maxDataValue {
-                    maxDataValue = value
-                }
+                LineMark(
+                    x: .value("Second", index),
+                    y: .value("Speed", speed.1)
+                )
+                .foregroundStyle(.blue)
+                .symbol(by: .value("Type", "Download"))
+                .symbolSize(0)
             }
-            maxDataValue *= 1.2 // 20% increase
-            
-            for (index, (upload, download)) in data.enumerated() {
-                
-                // Download speed
-                let xDownPos = width - CGFloat(index) * spacing
-                let yDownPos =
-                    height - (CGFloat(download) / maxDataValue) * height
-
-                if index == 0 {
-                    downloadPath.move(to: CGPoint(x: xDownPos, y: yDownPos))
-                } else {
-                    downloadPath.addLine(to: CGPoint(x: xDownPos, y: yDownPos))
-                }
-                
-                // Upload speed
-                let xUpPos = width - CGFloat(index) * spacing
-                let yUpPos =
-                    height - (CGFloat(upload) / maxDataValue) * height
-
-                if index == 0 {
-                    uploadPath.move(to: CGPoint(x: xUpPos, y: yUpPos))
-                } else {
-                    uploadPath.addLine(to: CGPoint(x: xUpPos, y: yUpPos))
-                }
-                
-            }
-
-            context.stroke(downloadPath, with: .color(.blue), lineWidth: 2)
-            context.stroke(uploadPath, with: .color(.red), lineWidth: 2)
         }
+        .chartXScale(domain: [59, 0])
+        .chartForegroundStyleScale([
+            "Upload": .red,
+            "Download": .blue
+        ])
         .frame(width: 600, height: 200)
-        .background(Color.clear)
     }
 }
 

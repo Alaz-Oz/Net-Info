@@ -9,32 +9,32 @@ import Combine
 class NetworkSpeedBuffer: Sequence, ObservableObject {
 
     let maxSize: Int
-
-    private var uploads: [UInt32]
-    private var downloads: [UInt32]
+    private var buffer: [(UInt32, UInt32)]
+    
     @Published private var currentIndex: Int = -1  // points to freshly inserted value
     private var pastIndex: Int = 0
 
     init(size: Int) {
         self.maxSize = size
-        self.uploads = Array(repeating: 0, count: size)  // Initialize with zeros
-        self.downloads = Array(repeating: 0, count: size)  // Initialize with zeros
+        self.buffer = Array(repeating: (0,0), count: size) // Initialize with zeros
+        
     }
 
+    func toArray() -> [(UInt32, UInt32)] {
+        return Array(
+            buffer[currentIndex + 1..<maxSize] +
+            buffer[0..<currentIndex + 1]
+        ).reversed()
+    }
+
+    func enumerated() -> [(Int, (UInt32, UInt32))] {
+        return Array(toArray().enumerated())
+    }
+    
     func push(_ upload: UInt32, _ download: UInt32) {
         pastIndex = currentIndex
         currentIndex = (currentIndex + 1) % maxSize
-
-        uploads[currentIndex] = upload
-        downloads[currentIndex] = download
-
-    }
-
-    func peek() -> (UInt32, UInt32) {
-        return (uploads[currentIndex], downloads[currentIndex])
-    }
-    func peekPast() -> (UInt32, UInt32) {
-        return (uploads[pastIndex], downloads[pastIndex])
+        buffer[currentIndex] = (upload, download)
     }
 
     // Conforming to Sequence protocol
@@ -58,8 +58,7 @@ class NetworkSpeedBuffer: Sequence, ObservableObject {
 
         mutating func next() -> (UInt32, UInt32)? {
             guard count > 0 else { return nil }
-
-            let value = (buffer.uploads[index], buffer.downloads[index])
+            let value = buffer.buffer[index];
             index = (index - 1 + count) % count
 
             if index == termination {
