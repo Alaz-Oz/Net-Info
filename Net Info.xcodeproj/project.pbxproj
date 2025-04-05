@@ -6,7 +6,12 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		3F307AD52CD3AD8300A9D081 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 3F307AD42CD3AD7D00A9D081 /* README.md */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
+		3F307AD42CD3AD7D00A9D081 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		3F5096BD2CCAAF9800DDA0A9 /* Net Info.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Net Info.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -32,6 +37,7 @@
 		3F5096B42CCAAF9800DDA0A9 = {
 			isa = PBXGroup;
 			children = (
+				3F307AD42CD3AD7D00A9D081 /* README.md */,
 				3F5096BF2CCAAF9800DDA0A9 /* Net Info */,
 				3F5096BE2CCAAF9800DDA0A9 /* Products */,
 			);
@@ -109,6 +115,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3F307AD52CD3AD8300A9D081 /* README.md in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -263,6 +270,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "oz.alaz.Net-Info";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -291,6 +299,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "oz.alaz.Net-Info";
 				PRODUCT_NAME = "$(TARGET_NAME)";

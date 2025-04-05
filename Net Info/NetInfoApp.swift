@@ -24,19 +24,37 @@ struct NetInfoApp: App {
 
 
 
-class AppDelegate: NSObject, NSApplicationDelegate {
+class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     var statusItem: NSStatusItem!
-//    var windowController: MyWindowController?
+    var visualizeWindow: NSWindow?
 
     @objc func quitApp() {
         NSApplication.shared.terminate(self)
     }
+
     @objc func showVisualGraph() {
-//        if windowcontroller == nil {
-//            windowController = MyWindowController
-//        }
+        if visualizeWindow == nil {
+            // Making a new window
+            visualizeWindow = NSWindow(
+                contentRect: NSRect(x: 0, y: 0, width: 300, height: 200),
+                styleMask: [.closable, .titled, .miniaturizable],
+                backing: .buffered,
+                defer: false
+            )
+            visualizeWindow?.center()
+            visualizeWindow?.setFrameAutosaveName("Visuals")
+            visualizeWindow?.contentView = NSHostingView(rootView: ContentView())
+            visualizeWindow?.title = "Visualizer"
+            visualizeWindow?.delegate = self
+            visualizeWindow?.isReleasedWhenClosed = false
+        }
+        
+        // Show the window
+        visualizeWindow?.makeKeyAndOrderFront(nil)
+        NSApp.activate()
         
     }
+
     func applicationDidFinishLaunching(_ notification: Notification) {
         // Create the status bar item
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
@@ -61,6 +79,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             }
         }
     }
+
     // Create an attributed string with two lines for upload and download
     func createAttributedString(upload: String, download: String)
         -> NSAttributedString
@@ -94,4 +113,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         return combinedString
     }
+
+
+    func windowWillClose(_ notification: Notification) {
+        if let window = notification.object as? NSWindow, window == visualizeWindow {
+            visualizeWindow = nil
+        }
+    }
+
 }
+
+// MARK: - NSWindowDelegate

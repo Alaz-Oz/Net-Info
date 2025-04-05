@@ -13,6 +13,8 @@ class NetworkMonitor {
 
     private var previousUpload: UInt32 = 0
     private var previousDownload: UInt32 = 0
+    
+    let buffer = NetworkSpeedBuffer(size: 60)
 
     func startMonitoring(
         callback: @escaping (_ uploadSpeed: String, _ downloadSpeed: String) ->
@@ -31,7 +33,7 @@ class NetworkMonitor {
                 curr: upload, pre: self.previousUpload)
             let downloadBytesPerSecond = self.getGap(
                 curr: download, pre: self.previousDownload)
-
+            self.buffer.push(uploadBytesPerSecond, downloadBytesPerSecond)
             // Update previous values for next calculation
             self.previousUpload = upload
             self.previousDownload = download
