@@ -10,19 +10,14 @@ import SwiftUI
 @main
 struct NetInfoApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+
     var body: some Scene {
-        //                WindowGroup {
-        //                    ContentView()
-        //                }
         Settings {
             Text("Created by AlazOz (asteroidalaz@gmail.com)")
         }
 
     }
 }
-
-
-
 
 class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     var statusItem: NSStatusItem!
@@ -44,12 +39,14 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             )
             visualizeWindow?.center()
             visualizeWindow?.setFrameAutosaveName("Visuals")
-            visualizeWindow?.contentView = NSHostingView(rootView: VisualizerView())
+            visualizeWindow?.contentView = NSHostingView(
+                rootView: VisualizerView()
+            )
             visualizeWindow?.title = "Visualizer"
             visualizeWindow?.delegate = self
             visualizeWindow?.isReleasedWhenClosed = false
         }
-        
+
         // Show the window
         visualizeWindow?.makeKeyAndOrderFront(nil)
         if #available(macOS 14.0, *) {
@@ -57,9 +54,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         } else {
             NSApp.activate(ignoringOtherApps: true)
         }
-        
-    }
 
+    }
 
     @objc func openSettings() {
         if settingsWindow == nil {
@@ -71,7 +67,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             )
             settingsWindow?.center()
             settingsWindow?.title = "Settings"
-            settingsWindow?.contentView = NSHostingView(rootView: SettingsView())
+            settingsWindow?.contentView = NSHostingView(
+                rootView: SettingsView()
+            )
             settingsWindow?.delegate = self
             settingsWindow?.isReleasedWhenClosed = false
         }
@@ -82,26 +80,49 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         // Create the status bar item
-        statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+        statusItem = NSStatusBar.system.statusItem(
+            withLength: NSStatusItem.variableLength
+        )
 
         if let button = statusItem?.button {
             button.alignment = .right
         }
-        
+
         let menu = NSMenu()
-        menu.addItem(NSMenuItem(title: "Visualze", action: #selector(showVisualGraph), keyEquivalent: ""))
+        menu.addItem(
+            NSMenuItem(
+                title: "Visualze",
+                action: #selector(showVisualGraph),
+                keyEquivalent: ""
+            )
+        )
         menu.addItem(NSMenuItem.separator())
-        menu.addItem(NSMenuItem(title: "Settings", action: #selector(openSettings), keyEquivalent: ","))
-        menu.addItem(NSMenuItem(title: "Quit", action: #selector(quitApp), keyEquivalent: ""))
+        menu.addItem(
+            NSMenuItem(
+                title: "Settings",
+                action: #selector(openSettings),
+                keyEquivalent: ","
+            )
+        )
+        menu.addItem(
+            NSMenuItem(
+                title: "Quit",
+                action: #selector(quitApp),
+                keyEquivalent: ""
+            )
+        )
         statusItem?.menu = menu
-        
-        
+
         // Start monitoring the network speed
         NetworkMonitor.shared.startMonitoring {
-            uploadSpeed, downloadSpeed in
+            uploadSpeed,
+            downloadSpeed in
             DispatchQueue.main.async {
                 self.statusItem.button?.attributedTitle =
-                    self.createAttributedString(upload: uploadSpeed, download: downloadSpeed)
+                    self.createAttributedString(
+                        upload: uploadSpeed,
+                        download: downloadSpeed
+                    )
             }
         }
     }
@@ -128,9 +149,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         ]
 
         let uploadString = NSAttributedString(
-            string: upload + " ↑\n", attributes: uploadAttributes)
+            string: upload + " ↑\n",
+            attributes: uploadAttributes
+        )
         let downloadString = NSAttributedString(
-            string: download + " ↓", attributes: downloadAttributes)
+            string: download + " ↓",
+            attributes: downloadAttributes
+        )
 
         let combinedString = NSMutableAttributedString()
 
@@ -140,9 +165,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         return combinedString
     }
 
-
     func windowWillClose(_ notification: Notification) {
-        if let window = notification.object as? NSWindow, window == visualizeWindow {
+        if let window = notification.object as? NSWindow,
+            window == visualizeWindow
+        {
             visualizeWindow = nil
         }
     }

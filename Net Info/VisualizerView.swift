@@ -5,8 +5,8 @@
 //  Created by Afroz Alam on 24/10/24.
 //
 
-import SwiftUI
 import Charts
+import SwiftUI
 
 struct VisualizerView: View {
     let buffer = NetworkMonitor.shared.buffer
@@ -54,7 +54,7 @@ struct ChartView: View {
         .chartXScale(domain: [59, 0])
         .chartForegroundStyleScale([
             "Upload": .red,
-            "Download": .blue
+            "Download": .blue,
         ])
         .frame(width: 600, height: 200)
     }
