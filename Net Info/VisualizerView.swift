@@ -1,5 +1,5 @@
 //
-//  ContentView.swift
+//  VisualizerView.swift
 //  Net Info
 //
 //  Created by Afroz Alam on 24/10/24.
@@ -8,7 +8,7 @@
 import SwiftUI
 import Charts
 
-struct ContentView: View {
+struct VisualizerView: View {
     let buffer = NetworkMonitor.shared.buffer
     var body: some View {
         VStack {
@@ -61,5 +61,5 @@ struct ChartView: View {
 }
 
 #Preview {
-    ContentView()
+    VisualizerView()
 }

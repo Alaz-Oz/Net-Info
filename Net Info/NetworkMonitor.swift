@@ -14,7 +14,10 @@ class NetworkMonitor {
     private var previousUpload: UInt32 = 0
     private var previousDownload: UInt32 = 0
     
+    @AppStorage("SelectedInterface") private var currentInterface = "en0"
     let buffer = NetworkSpeedBuffer(size: 60)
+
+    var availableInterfaces: [String] = []
 
     func startMonitoring(
         callback: @escaping (_ uploadSpeed: String, _ downloadSpeed: String) ->
@@ -46,6 +49,7 @@ class NetworkMonitor {
             callback(uploadSpeed, downloadSpeed)
         }
     }
+
     func getGap(curr: UInt32, pre: UInt32) -> UInt32 {
         if curr < pre {
             return UINT32_MAX - pre + curr
@@ -66,9 +70,14 @@ class NetworkMonitor {
 
                 let interface = pointer!.pointee
                 let name = String(cString: interface.ifa_name)
+                
+                if name.hasPrefix("en"), !availableInterfaces.contains(name){
+                    availableInterfaces.append(name)
+                }
+                
 
-                // Filter for active Wi-Fi (en0) interface
-                if name == "en0", let ifaData = interface.ifa_data {
+                // Filter for current interface
+                if name == currentInterface, let ifaData = interface.ifa_data {
                     let data = ifaData.assumingMemoryBound(to: if_data.self)
                         .pointee
                     upload += data.ifi_obytes
@@ -80,6 +89,13 @@ class NetworkMonitor {
 
         return (upload, download)
     }
+    func getCurrentInterface() -> String {
+        return currentInterface
+    }
+    func setCurrentInterface(_ name: String){
+        currentInterface = name
+    }
+
     // Helper function to format speed with units
     func formatSpeed(_ bytesPerSecond: UInt32) -> String {
 

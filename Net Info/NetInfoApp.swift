@@ -27,6 +27,7 @@ struct NetInfoApp: App {
 class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     var statusItem: NSStatusItem!
     var visualizeWindow: NSWindow?
+    var settingsWindow: NSWindow?
 
     @objc func quitApp() {
         NSApplication.shared.terminate(self)
@@ -43,7 +44,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             )
             visualizeWindow?.center()
             visualizeWindow?.setFrameAutosaveName("Visuals")
-            visualizeWindow?.contentView = NSHostingView(rootView: ContentView())
+            visualizeWindow?.contentView = NSHostingView(rootView: VisualizerView())
             visualizeWindow?.title = "Visualizer"
             visualizeWindow?.delegate = self
             visualizeWindow?.isReleasedWhenClosed = false
@@ -59,6 +60,26 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         
     }
 
+
+    @objc func openSettings() {
+        if settingsWindow == nil {
+            settingsWindow = NSWindow(
+                contentRect: NSRect(x: 0, y: 0, width: 300, height: 150),
+                styleMask: [.titled, .closable],
+                backing: .buffered,
+                defer: false
+            )
+            settingsWindow?.center()
+            settingsWindow?.title = "Settings"
+            settingsWindow?.contentView = NSHostingView(rootView: SettingsView())
+            settingsWindow?.delegate = self
+            settingsWindow?.isReleasedWhenClosed = false
+        }
+        // Show the window
+        settingsWindow?.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+    }
+
     func applicationDidFinishLaunching(_ notification: Notification) {
         // Create the status bar item
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
@@ -70,6 +91,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         let menu = NSMenu()
         menu.addItem(NSMenuItem(title: "Visualze", action: #selector(showVisualGraph), keyEquivalent: ""))
         menu.addItem(NSMenuItem.separator())
+        menu.addItem(NSMenuItem(title: "Settings", action: #selector(openSettings), keyEquivalent: ","))
         menu.addItem(NSMenuItem(title: "Quit", action: #selector(quitApp), keyEquivalent: ""))
         statusItem?.menu = menu
         
@@ -126,5 +148,3 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     }
 
 }
-
-// MARK: - NSWindowDelegate
