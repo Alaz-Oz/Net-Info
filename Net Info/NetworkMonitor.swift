@@ -21,7 +21,7 @@ class NetworkMonitor {
     var availableInterfaces: [String] = []
 
     func startMonitoring(
-        callback: @escaping (_ uploadSpeed: String, _ downloadSpeed: String) ->
+        callback: @escaping (_ uploadBytesPerSecond: UInt32, _ downloadBytesPerSecond: UInt32) ->
             Void
     ) {
 
@@ -51,14 +51,9 @@ class NetworkMonitor {
             self.previousUpload = upload
             self.previousDownload = download
 
-            // Format speeds with appropriate units
-            let uploadSpeed = NetworkMonitor.formatSpeed(uploadBytesPerSecond)
-            let downloadSpeed = NetworkMonitor.formatSpeed(
-                downloadBytesPerSecond
-            )
 
             // Pass formatted strings to the callback
-            callback(uploadSpeed, downloadSpeed)
+            callback(uploadBytesPerSecond, downloadBytesPerSecond)
         }
     }
 

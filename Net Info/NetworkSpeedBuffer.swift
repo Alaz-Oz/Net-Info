@@ -8,37 +8,22 @@ import Combine
 
 class NetworkSpeedBuffer: Sequence, ObservableObject {
 
-    let maxSize: Int
     private var buffer: [(UInt32, UInt32)]
 
-    @Published private var currentIndex: Int = -1  // points to freshly inserted value
-    private var pastIndex: Int = 0
+    @Published private var currentIndex: Int = 0
 
     init(size: Int) {
-        self.maxSize = size
         self.buffer = Array(repeating: (0, 0), count: size)  // Initialize with zeros
-
     }
 
     func reset() {
-        for i in buffer.indices {
-            buffer[i] = (0, 0)
+        buffer.withUnsafeMutableBufferPointer {
+            $0.initialize(repeating: (0, 0))
         }
     }
 
-    func toArray() -> [(UInt32, UInt32)] {
-        return Array(
-            buffer[currentIndex + 1..<maxSize] + buffer[0..<currentIndex + 1]
-        ).reversed()
-    }
-
-    func enumerated() -> [(Int, (UInt32, UInt32))] {
-        return Array(toArray().enumerated())
-    }
-
     func push(_ upload: UInt32, _ download: UInt32) {
-        pastIndex = currentIndex
-        currentIndex = (currentIndex + 1) % maxSize
+        currentIndex = (currentIndex + 1) % buffer.count
         buffer[currentIndex] = (upload, download)
     }
 
@@ -49,21 +34,22 @@ class NetworkSpeedBuffer: Sequence, ObservableObject {
 
     // Nested iterator struct
     struct BufferIterator: IteratorProtocol {
-        private let buffer: NetworkSpeedBuffer
+        private let buffer: [(UInt32, UInt32)]
         private var index: Int
         private let count: Int
         private let termination: Int
 
         init(buffer: NetworkSpeedBuffer) {
-            self.buffer = buffer
+            self.buffer = buffer.buffer
             self.index = buffer.currentIndex
-            self.count = buffer.maxSize
+            self.count = buffer.buffer.count // The buffer should be > 1
             self.termination = self.index
         }
 
         mutating func next() -> (UInt32, UInt32)? {
             guard count > 0 else { return nil }
-            let value = buffer.buffer[index]
+
+            let value = buffer[index]
             index = (index - 1 + count) % count
 
             if index == termination {

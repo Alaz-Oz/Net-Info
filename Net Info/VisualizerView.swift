@@ -9,7 +9,7 @@ import Charts
 import SwiftUI
 
 struct VisualizerView: View {
-    let buffer = NetworkMonitor.shared.buffer
+    @ObservedObject var buffer = NetworkMonitor.shared.buffer
     var body: some View {
         VStack {
             HStack {
@@ -21,7 +21,7 @@ struct VisualizerView: View {
                     .padding()
             }
 
-            ChartView(data: NetworkMonitor.shared.buffer)
+            ChartView(data: buffer)
             Spacer()
         }
         .padding()
@@ -36,19 +36,21 @@ struct ChartView: View {
             ForEach(Array(data.enumerated()), id: \.offset) { index, speed in
                 LineMark(
                     x: .value("Second", index),
-                    y: .value("Speed", speed.0)
-                )
-                .foregroundStyle(.red)
-                .symbol(by: .value("Type", "Upload"))
-                .symbolSize(0)
-
-                LineMark(
-                    x: .value("Second", index),
                     y: .value("Speed", speed.1)
                 )
                 .foregroundStyle(.blue)
                 .symbol(by: .value("Type", "Download"))
                 .symbolSize(0)
+
+                LineMark(
+                    x: .value("Second", index),
+                    y: .value("Speed", speed.0)
+                )
+                .lineStyle(StrokeStyle(lineWidth: 1))
+                .foregroundStyle(.red)
+                .symbol(by: .value("Type", "Upload"))
+                .symbolSize(0)
+
             }
         }
         .chartXScale(domain: [59, 0])
@@ -56,7 +58,7 @@ struct ChartView: View {
             AxisMarks(position: .automatic) { value in
                 AxisGridLine()
                 AxisTick()
-                AxisValueLabel() {
+                AxisValueLabel {
                     if let bytesPerSec = value.as(UInt32.self) {
                         Text(NetworkMonitor.formatSpeed(bytesPerSec))
                     }
@@ -68,6 +70,7 @@ struct ChartView: View {
             "Download": .blue,
         ])
         .frame(width: 600, height: 200)
+
     }
 }
 
