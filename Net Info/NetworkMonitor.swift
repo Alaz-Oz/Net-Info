@@ -10,6 +10,7 @@ import SwiftUI
 class NetworkMonitor {
     static let shared = NetworkMonitor()
     private var timer: Timer?
+    private var reload = true
 
     private var previousUpload: UInt32 = 0
     private var previousDownload: UInt32 = 0
@@ -23,12 +24,17 @@ class NetworkMonitor {
         callback: @escaping (_ uploadSpeed: String, _ downloadSpeed: String) ->
             Void
     ) {
-        // Initialize previous values
-        (previousUpload, previousDownload) = getNetworkData()
 
         // Schedule timer to fetch network data every second
         timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) {
             _ in
+            if self.reload {
+                // Initialize previous values
+                (self.previousUpload, self.previousDownload) =
+                    self.getNetworkData()
+                self.buffer.reset()
+                self.reload = false
+            }
             let (upload, download) = self.getNetworkData()
 
             // Calculate upload and download speeds in bytes per second
@@ -47,7 +53,9 @@ class NetworkMonitor {
 
             // Format speeds with appropriate units
             let uploadSpeed = NetworkMonitor.formatSpeed(uploadBytesPerSecond)
-            let downloadSpeed = NetworkMonitor.formatSpeed(downloadBytesPerSecond)
+            let downloadSpeed = NetworkMonitor.formatSpeed(
+                downloadBytesPerSecond
+            )
 
             // Pass formatted strings to the callback
             callback(uploadSpeed, downloadSpeed)
@@ -97,6 +105,7 @@ class NetworkMonitor {
     }
     func setCurrentInterface(_ name: String) {
         currentInterface = name
+        reload = true
     }
 
     // Helper function to format speed with units

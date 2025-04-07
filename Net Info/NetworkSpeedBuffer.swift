@@ -20,6 +20,12 @@ class NetworkSpeedBuffer: Sequence, ObservableObject {
 
     }
 
+    func reset() {
+        for i in buffer.indices {
+            buffer[i] = (0, 0)
+        }
+    }
+
     func toArray() -> [(UInt32, UInt32)] {
         return Array(
             buffer[currentIndex + 1..<maxSize] + buffer[0..<currentIndex + 1]
