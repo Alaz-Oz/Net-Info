@@ -13,7 +13,7 @@ class NetworkMonitor {
 
     private var previousUpload: UInt32 = 0
     private var previousDownload: UInt32 = 0
-    
+
     @AppStorage("SelectedInterface") private var currentInterface = "en0"
     let buffer = NetworkSpeedBuffer(size: 60)
 
@@ -33,17 +33,21 @@ class NetworkMonitor {
 
             // Calculate upload and download speeds in bytes per second
             let uploadBytesPerSecond = self.getGap(
-                curr: upload, pre: self.previousUpload)
+                curr: upload,
+                pre: self.previousUpload
+            )
             let downloadBytesPerSecond = self.getGap(
-                curr: download, pre: self.previousDownload)
+                curr: download,
+                pre: self.previousDownload
+            )
             self.buffer.push(uploadBytesPerSecond, downloadBytesPerSecond)
             // Update previous values for next calculation
             self.previousUpload = upload
             self.previousDownload = download
 
             // Format speeds with appropriate units
-            let uploadSpeed = self.formatSpeed(uploadBytesPerSecond)
-            let downloadSpeed = self.formatSpeed(downloadBytesPerSecond)
+            let uploadSpeed = NetworkMonitor.formatSpeed(uploadBytesPerSecond)
+            let downloadSpeed = NetworkMonitor.formatSpeed(downloadBytesPerSecond)
 
             // Pass formatted strings to the callback
             callback(uploadSpeed, downloadSpeed)
@@ -70,11 +74,10 @@ class NetworkMonitor {
 
                 let interface = pointer!.pointee
                 let name = String(cString: interface.ifa_name)
-                
-                if name.hasPrefix("en"), !availableInterfaces.contains(name){
+
+                if name.hasPrefix("en"), !availableInterfaces.contains(name) {
                     availableInterfaces.append(name)
                 }
-                
 
                 // Filter for current interface
                 if name == currentInterface, let ifaData = interface.ifa_data {
@@ -92,15 +95,18 @@ class NetworkMonitor {
     func getCurrentInterface() -> String {
         return currentInterface
     }
-    func setCurrentInterface(_ name: String){
+    func setCurrentInterface(_ name: String) {
         currentInterface = name
     }
 
     // Helper function to format speed with units
-    func formatSpeed(_ bytesPerSecond: UInt32) -> String {
+    static func formatSpeed(_ bytesPerSecond: UInt32) -> String {
 
         if bytesPerSecond > 1024 * 1024 {
-            return String(format: "%.2f MB/s", Float(bytesPerSecond) / (1024 * 1024))
+            return String(
+                format: "%.2f MB/s",
+                Float(bytesPerSecond) / (1024 * 1024)
+            )
         } else if bytesPerSecond > 1024 {
             return String(format: "%3d KB/s", bytesPerSecond / 1024)
         }

@@ -5,8 +5,8 @@
 //  Created by Afroz Alam on 24/10/24.
 //
 
-import SwiftUI
 import Charts
+import SwiftUI
 
 struct VisualizerView: View {
     let buffer = NetworkMonitor.shared.buffer
@@ -52,9 +52,20 @@ struct ChartView: View {
             }
         }
         .chartXScale(domain: [59, 0])
+        .chartYAxis {
+            AxisMarks(position: .automatic) { value in
+                AxisGridLine()
+                AxisTick()
+                AxisValueLabel() {
+                    if let bytesPerSec = value.as(UInt32.self) {
+                        Text(NetworkMonitor.formatSpeed(bytesPerSec))
+                    }
+                }
+            }
+        }
         .chartForegroundStyleScale([
             "Upload": .red,
-            "Download": .blue
+            "Download": .blue,
         ])
         .frame(width: 600, height: 200)
     }

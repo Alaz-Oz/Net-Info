@@ -8,27 +8,32 @@ import SwiftUI
 import SystemConfiguration
 
 struct SettingsView: View {
-    @State private var selectedInterface: String = NetworkMonitor.shared.getCurrentInterface()
-    
+    @State private var selectedInterface: String = NetworkMonitor.shared
+        .getCurrentInterface()
+
     private func getFriendlyName(_ bsdName: String) -> String? {
-        if let interfaces = SCNetworkInterfaceCopyAll() as? [SCNetworkInterface] {
+        if let interfaces = SCNetworkInterfaceCopyAll() as? [SCNetworkInterface]
+        {
             for interface in interfaces {
-                let currentBSDName = SCNetworkInterfaceGetBSDName(interface) as String?
+                let currentBSDName =
+                    SCNetworkInterfaceGetBSDName(interface) as String?
                 if currentBSDName == bsdName {
-                    return SCNetworkInterfaceGetLocalizedDisplayName(interface) as String?
+                    return SCNetworkInterfaceGetLocalizedDisplayName(interface)
+                        as String?
                 }
             }
         }
         return nil
     }
-    
+
     var body: some View {
         VStack(alignment: .leading) {
             Text("Select Network Interface")
                 .font(.headline)
 
             Picker("Interface", selection: $selectedInterface) {
-                ForEach(NetworkMonitor.shared.availableInterfaces, id: \.self) { iface in
+                ForEach(NetworkMonitor.shared.availableInterfaces, id: \.self) {
+                    iface in
                     Text(
                         getFriendlyName(iface) ?? "Unidentified"
                     ).tag(iface)
