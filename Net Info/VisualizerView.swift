@@ -52,6 +52,17 @@ struct ChartView: View {
             }
         }
         .chartXScale(domain: [59, 0])
+        .chartYAxis {
+            AxisMarks(position: .automatic) { value in
+                AxisGridLine()
+                AxisTick()
+                AxisValueLabel() {
+                    if let bytesPerSec = value.as(UInt32.self) {
+                        Text(NetworkMonitor.formatSpeed(bytesPerSec))
+                    }
+                }
+            }
+        }
         .chartForegroundStyleScale([
             "Upload": .red,
             "Download": .blue,

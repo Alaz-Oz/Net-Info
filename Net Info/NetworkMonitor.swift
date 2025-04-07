@@ -46,8 +46,8 @@ class NetworkMonitor {
             self.previousDownload = download
 
             // Format speeds with appropriate units
-            let uploadSpeed = self.formatSpeed(uploadBytesPerSecond)
-            let downloadSpeed = self.formatSpeed(downloadBytesPerSecond)
+            let uploadSpeed = NetworkMonitor.formatSpeed(uploadBytesPerSecond)
+            let downloadSpeed = NetworkMonitor.formatSpeed(downloadBytesPerSecond)
 
             // Pass formatted strings to the callback
             callback(uploadSpeed, downloadSpeed)
@@ -100,7 +100,7 @@ class NetworkMonitor {
     }
 
     // Helper function to format speed with units
-    func formatSpeed(_ bytesPerSecond: UInt32) -> String {
+    static func formatSpeed(_ bytesPerSecond: UInt32) -> String {
 
         if bytesPerSecond > 1024 * 1024 {
             return String(
