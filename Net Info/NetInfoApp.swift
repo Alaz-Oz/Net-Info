@@ -91,7 +91,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         let menu = NSMenu()
         menu.addItem(
             NSMenuItem(
-                title: "Visualze",
+                title: "Visualize",
                 action: #selector(showVisualGraph),
                 keyEquivalent: ""
             )
