@@ -1,5 +1,5 @@
 //
-//  Net_InfoApp.swift
+//  NetInfoApp.swift
 //  Net Info
 //
 //  Created by Afroz Alam on 24/10/24.
@@ -11,12 +11,7 @@ import SwiftUI
 struct NetInfoApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
-    var body: some Scene {
-        Settings {
-            Text("Created by AlazOz (asteroidalaz@gmail.com)")
-        }
-
-    }
+    var body: some Scene {}
 }
 
 class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
@@ -24,11 +19,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     var visualizeWindow: NSWindow?
     var settingsWindow: NSWindow?
 
+    var prevBPS: (UInt32, UInt32) = (0, 0)
+
     @objc func quitApp() {
         NSApplication.shared.terminate(self)
     }
 
-    @objc func showVisualGraph() {
+    @objc func openVisualization() {
         if visualizeWindow == nil {
             // Making a new window
             visualizeWindow = NSWindow(
@@ -49,11 +46,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
         // Show the window
         visualizeWindow?.makeKeyAndOrderFront(nil)
-        if #available(macOS 14.0, *) {
-            NSApp.activate()
-        } else {
-            NSApp.activate(ignoringOtherApps: true)
-        }
+        NSApp.activate(ignoringOtherApps: true)
 
     }
 
@@ -92,7 +85,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         menu.addItem(
             NSMenuItem(
                 title: "Visualize",
-                action: #selector(showVisualGraph),
+                action: #selector(openVisualization),
                 keyEquivalent: ""
             )
         )
@@ -115,61 +108,81 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
         // Start monitoring the network speed
         NetworkMonitor.shared.startMonitoring {
-            uploadSpeed,
-            downloadSpeed in
+            uploadBytesPerSec,
+            downloadBytesPerSec in
             DispatchQueue.main.async {
-                self.statusItem.button?.attributedTitle =
-                    self.createAttributedString(
-                        upload: uploadSpeed,
-                        download: downloadSpeed
+
+                if self.prevBPS.0 != uploadBytesPerSec
+                    || self.prevBPS.1 != downloadBytesPerSec
+                {
+                    // Update needed
+                    let uploadSpeed = NetworkMonitor.formatSpeed(
+                        uploadBytesPerSec
                     )
+                    let downloadSpeed = NetworkMonitor.formatSpeed(
+                        downloadBytesPerSec
+                    )
+
+                    self.statusItem.button?.attributedTitle =
+                        self.createAttributedString(
+                            upload: uploadSpeed,
+                            download: downloadSpeed
+                        )
+                }
+                self.prevBPS = (uploadBytesPerSec, downloadBytesPerSec)
             }
         }
+    }
+
+    let uploadAttributes: [NSAttributedString.Key: Any]
+    let downloadAttributes: [NSAttributedString.Key: Any]
+
+    override init() {
+        let style = NSMutableParagraphStyle()
+        style.alignment = .right
+        style.lineHeightMultiple = 0.7
+
+        uploadAttributes = [
+            .font: NSFont.systemFont(ofSize: 9),
+            .foregroundColor: NSColor.labelColor,
+            .paragraphStyle: style,
+        ]
+        var download = uploadAttributes
+        download[.baselineOffset] = -5
+        downloadAttributes = download
+
+        super.init()
     }
 
     // Create an attributed string with two lines for upload and download
     func createAttributedString(upload: String, download: String)
         -> NSAttributedString
     {
-        let paragraphStyle = NSMutableParagraphStyle()
-        paragraphStyle.alignment = .right
-        paragraphStyle.lineHeightMultiple = 0.7
-
-        let uploadAttributes: [NSAttributedString.Key: Any] = [
-            .font: NSFont.systemFont(ofSize: 9),
-            .foregroundColor: NSColor.labelColor,
-            .paragraphStyle: paragraphStyle,
-        ]
-
-        let downloadAttributes: [NSAttributedString.Key: Any] = [
-            .font: NSFont.systemFont(ofSize: 9),
-            .foregroundColor: NSColor.labelColor,
-            .paragraphStyle: paragraphStyle,
-            .baselineOffset: -5,
-        ]
-
-        let uploadString = NSAttributedString(
-            string: upload + " ↑\n",
-            attributes: uploadAttributes
-        )
-        let downloadString = NSAttributedString(
-            string: download + " ↓",
-            attributes: downloadAttributes
-        )
-
         let combinedString = NSMutableAttributedString()
 
-        combinedString.append(uploadString)
-        combinedString.append(downloadString)
+        combinedString.append(
+            NSAttributedString(
+                string: "\(upload) ↑\n",
+                attributes: uploadAttributes
+            )
+        )
+        combinedString.append(
+            NSAttributedString(
+                string: "\(download) ↓",
+                attributes: downloadAttributes
+            )
+        )
 
         return combinedString
     }
 
     func windowWillClose(_ notification: Notification) {
-        if let window = notification.object as? NSWindow,
-            window == visualizeWindow
-        {
-            visualizeWindow = nil
+        if let window = notification.object as? NSWindow {
+            if window == visualizeWindow {
+                window.contentView = nil
+            } else if window == settingsWindow {
+                window.contentView = nil
+            }
         }
     }
 
