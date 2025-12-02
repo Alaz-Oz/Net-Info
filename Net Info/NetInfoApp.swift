@@ -45,7 +45,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
                 rootView: VisualizerView()
             )
             visualizeWindow?.title = "Visualizer"
-            visualizeWindow?.delegate = self
             visualizeWindow?.isReleasedWhenClosed = false
         }
 
@@ -68,7 +67,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             settingsWindow?.contentView = NSHostingView(
                 rootView: SettingsView()
             )
-            settingsWindow?.delegate = self
             settingsWindow?.isReleasedWhenClosed = false
         }
         // Show the window
@@ -179,16 +177,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         )
 
         return combinedString
-    }
-
-    func windowWillClose(_ notification: Notification) {
-        if let window = notification.object as? NSWindow {
-            if window == visualizeWindow {
-                window.contentView = nil
-            } else if window == settingsWindow {
-                window.contentView = nil
-            }
-        }
     }
 
 }
