@@ -1,13 +1,48 @@
-name: Build App
+name: Build & Release App
 
 on:
   push:
-    tags:
-      - "v*"
+    branches:
+      - main
   pull_request:
   workflow_dispatch:
 
 jobs:
+  check_version:
+    runs-on: macos-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      tag_exists: ${{ steps.check_tag.outputs.tag_exists }}
+
+    steps:
+      - name: Setup Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: "16.1"
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract version
+        id: version
+        shell: bash
+        run: |
+          VERSION=$(xcodebuild -project "Net Info.xcodeproj" -target "Net Info" -showBuildSettings | grep "MARKETING_VERSION" | head -n 1 | sed 's/[ ]*MARKETING_VERSION = //')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Check if tag exists
+        id: check_tag
+        run: |
+          VERSION="v${{ steps.version.outputs.version }}"
+          if git rev-parse "$VERSION" >/dev/null 2>&1; then
+            echo "tag_exists=true" >> $GITHUB_OUTPUT
+            echo "Tag $VERSION already exists. Release will be skipped."
+          else
+            echo "tag_exists=false" >> $GITHUB_OUTPUT
+            echo "Tag $VERSION doesn't exist. Will create a draft release."
+          fi
+
   build:
     name: Build App
     runs-on: macos-latest
@@ -21,58 +56,38 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         
-      - name: Install Build certificate and provisioning profile
-        env:
-          BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
-          BUILD_CERTIFICATE_PASSWORD: ${{ secrets.BUILD_CERTIFICATE_PASSWORD }}
-          # BUILD_PROVISION_PROFILE_BASE64: ${{ secrets.BUILD_PROVISION_PROFILE_BASE64 }}
-          # KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+      - name: Build App (Unsigned)
         run: |
-          # create variables
-          CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
-          # PP_PATH=$RUNNER_TEMP/build_pp.mobileprovision
-          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+          xcodebuild -project "Net Info.xcodeproj" \
+            -scheme "Net Info" \
+            -configuration Release \
+            -derivedDataPath build \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_ENTITLEMENTS="" \
+            CODE_SIGN_STYLE="Manual" \
+            DEVELOPMENT_TEAM="" \
+            clean build
 
-          # import certificate and provisioning profile from secrets
-          echo -n "$BUILD_CERTIFICATE_BASE64" | base64 --decode -o $CERTIFICATE_PATH
-          # echo -n "$BUILD_PROVISION_PROFILE_BASE64" | base64 --decode -o $PP_PATH
-
-          # create temporary keychain
-          security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
-          security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
-          security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
-
-          # import certificate to keychain
-          security import $CERTIFICATE_PATH -P "$BUILD_CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
-          security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
-          security list-keychain -d user -s $KEYCHAIN_PATH
-
-          # apply provisioning profile
-          # mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          # cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles
-
-      - name: Build project
-        run: xcodebuild -scheme "Net Info" -configuration Release -archivePath ./build/App.xcarchive archive
-
-      - name: Export app
+      - name: Ad-hoc Sign App
         run: |
-          cp -R ./build/App.xcarchive/Products/Applications/*.app ./build/
+          codesign --force --deep --sign - "build/Build/Products/Release/Net Info.app"
 
-      - name: Zip Artifacts
+      - name: Zip App
         run: |
-          mkdir -p build/net_info
-          cp -r ./build/*.app ./build/net_info/
-          zip -r build/net_info.zip build/net_info
+          cd build/Build/Products/Release
+          ditto -c -k --sequesterRsrc --keepParent "Net Info.app" "Net Info.zip"
 
       - name: Upload a Build Artifact
         uses: actions/upload-artifact@v4.4.3
         with:
-          path: ./build/*.zip
+          path: build/Build/Products/Release/*.zip
           include-hidden-files: true
+
   release:
-    needs: build
+    needs: [check_version, build]
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/')
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.check_version.outputs.tag_exists == 'false'
 
     steps:
       - name: Download all artifacts
@@ -80,10 +95,14 @@ jobs:
         with:
           path: artifacts
 
-      - name: Create Release
+      - name: Create Draft Release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: v${{ needs.check_version.outputs.version }}
+          name: Release v${{ needs.check_version.outputs.version }}
           files: |
             artifacts/**/*
+          draft: true
+          prerelease: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
