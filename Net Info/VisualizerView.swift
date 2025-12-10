@@ -16,7 +16,8 @@ struct VisualizerView: View {
                 Image(systemName: "globe")
                     .imageScale(.large)
                     .foregroundStyle(.tint)
-                Text("Network Speed")
+
+                Text(NetworkMonitor.shared.ip_addr ?? "Network Speed")
                     .font(.headline)
                     .padding()
             }

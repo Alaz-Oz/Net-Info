@@ -20,8 +20,14 @@ class NetworkMonitor {
 
     var availableInterfaces: [String] = []
 
+    @Published
+    var ip_addr: String? = nil
+
     func startMonitoring(
-        callback: @escaping (_ uploadBytesPerSecond: UInt32, _ downloadBytesPerSecond: UInt32) ->
+        callback:
+            @escaping (
+                _ uploadBytesPerSecond: UInt32, _ downloadBytesPerSecond: UInt32
+            ) ->
             Void
     ) {
 
@@ -51,7 +57,6 @@ class NetworkMonitor {
             self.previousUpload = upload
             self.previousDownload = download
 
-
             // Pass formatted strings to the callback
             callback(uploadBytesPerSecond, downloadBytesPerSecond)
         }
@@ -80,6 +85,25 @@ class NetworkMonitor {
 
                 if name.hasPrefix("en"), !availableInterfaces.contains(name) {
                     availableInterfaces.append(name)
+                }
+
+                // Getting IP addr of current interface
+                if name == currentInterface, let addr = interface.ifa_addr {
+                    let addr = addr.pointee
+                    var hostname = [CChar](repeating: 0, count: Int(NI_MAXHOST))
+                    if addr.sa_family == sa_family_t(AF_INET) {
+                        if getnameinfo(
+                            interface.ifa_addr,
+                            socklen_t(addr.sa_len),
+                            &hostname,
+                            socklen_t(hostname.count),
+                            nil,
+                            socklen_t(0),
+                            NI_NUMERICHOST
+                        ) == 0 {
+                            ip_addr = String(cString: hostname)
+                        }
+                    }
                 }
 
                 // Filter for current interface
