@@ -42,7 +42,7 @@ class NetworkSpeedBuffer: Sequence, ObservableObject {
         init(buffer: NetworkSpeedBuffer) {
             self.buffer = buffer.buffer
             self.index = buffer.currentIndex
-            self.count = buffer.buffer.count // The buffer should be > 1
+            self.count = buffer.buffer.count  // The buffer should be > 1
             self.termination = self.index
         }
 
