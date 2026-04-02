@@ -108,6 +108,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             )
         )
         statusItem?.menu = menu
+        
+        // Initial speed visuals
+        statusItem.button?.attributedTitle =
+            self.createAttributedString(
+                upload: NetworkMonitor.formatSpeed(0),
+                download:NetworkMonitor.formatSpeed(0)
+            )
 
         // Start monitoring the network speed
         NetworkMonitor.shared.startMonitoring {

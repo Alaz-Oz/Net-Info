@@ -32,7 +32,7 @@ struct SettingsView: View {
                 .font(.headline)
 
             Picker("Interface", selection: $selectedInterface) {
-                ForEach(NetworkMonitor.shared.availableInterfaces, id: \.self) {
+                ForEach(NetworkMonitor.shared.getAvailableInterfaces(), id: \.self) {
                     iface in
                     Text(
                         getFriendlyName(iface) ?? "Unidentified"

@@ -18,8 +18,6 @@ class NetworkMonitor {
     @AppStorage("SelectedInterface") private var currentInterface = "en0"
     let buffer = NetworkSpeedBuffer(size: 60)
 
-    var availableInterfaces: [String] = []
-
     @Published
     var ip_addr: String? = nil
 
@@ -37,11 +35,13 @@ class NetworkMonitor {
             if self.reload {
                 // Initialize previous values
                 (self.previousUpload, self.previousDownload) =
-                    self.getNetworkData()
+                    self.getNetworkData(for: self.currentInterface)
                 self.buffer.reset()
                 self.reload = false
             }
-            let (upload, download) = self.getNetworkData()
+            let (upload, download) = self.getNetworkData(
+                for: self.currentInterface
+            )
 
             // Calculate upload and download speeds in bytes per second
             let uploadBytesPerSecond = self.getGap(
@@ -52,13 +52,19 @@ class NetworkMonitor {
                 curr: download,
                 pre: self.previousDownload
             )
-            self.buffer.push(uploadBytesPerSecond, downloadBytesPerSecond)
+            self.buffer.push(
+                uploadBytesPerSecond,
+                downloadBytesPerSecond
+            )
             // Update previous values for next calculation
             self.previousUpload = upload
             self.previousDownload = download
 
             // Pass formatted strings to the callback
-            callback(uploadBytesPerSecond, downloadBytesPerSecond)
+            callback(
+                uploadBytesPerSecond,
+                downloadBytesPerSecond
+            )
         }
     }
 
@@ -69,61 +75,92 @@ class NetworkMonitor {
         return curr - pre
     }
 
-    func getNetworkData() -> (UInt32, UInt32) {
+    func getIpAddress(for interfaceName: String) -> String? {
+        print("ip addr requested")
         var interfaceAddresses: UnsafeMutablePointer<ifaddrs>? = nil
+
+        guard getifaddrs(&interfaceAddresses) == 0 else { return nil }
+        defer { freeifaddrs(interfaceAddresses) }
+
+        var pointer = interfaceAddresses
+
+        while let interface = pointer?.pointee {
+            defer { pointer = interface.ifa_next }
+            var hostname = [CChar](repeating: 0, count: Int(NI_MAXHOST))
+
+            if strcmp(interface.ifa_name, interfaceName) == 0,
+                let addr = interface.ifa_addr,
+                addr.pointee.sa_family == sa_family_t(AF_INET),
+                getnameinfo(
+                    addr,
+                    socklen_t(addr.pointee.sa_len),
+                    &hostname,
+                    socklen_t(hostname.count),
+                    nil,
+                    0,
+                    NI_NUMERICHOST
+                ) == 0
+            {
+                return String(cString: hostname)
+            }
+
+        }
+
+        return nil
+    }
+    func getAvailableInterfaces() -> [String] {
+        var interfaceAddresses: UnsafeMutablePointer<ifaddrs>? = nil
+
+        guard getifaddrs(&interfaceAddresses) == 0 else { return [] }
+        defer { freeifaddrs(interfaceAddresses) }
+
+        var availableInterfaces = Set<String>()
+        var pointer = interfaceAddresses
+
+        while let interface = pointer?.pointee {
+            defer { pointer = interface.ifa_next }
+
+            let name = String(cString: interface.ifa_name)
+
+            if name.hasPrefix("en") {
+                availableInterfaces.insert(name)
+            }
+        }
+        return Array(availableInterfaces)
+    }
+
+    func getNetworkData(for interfaceName: String) -> (UInt32, UInt32) {
+        var interfaceAddresses: UnsafeMutablePointer<ifaddrs>? = nil
+        guard getifaddrs(&interfaceAddresses) == 0 else { return (0, 0) }
+        defer { freeifaddrs(interfaceAddresses) }
+
         var upload: UInt32 = 0
         var download: UInt32 = 0
 
-        // Get network interfaces
-        if getifaddrs(&interfaceAddresses) == 0 {
-            var pointer = interfaceAddresses
-            while pointer != nil {
-                defer { pointer = pointer?.pointee.ifa_next }
+        var pointer = interfaceAddresses
+        while let interface = pointer?.pointee {
+            defer { pointer = interface.ifa_next }
 
-                let interface = pointer!.pointee
-                let name = String(cString: interface.ifa_name)
-
-                if name.hasPrefix("en"), !availableInterfaces.contains(name) {
-                    availableInterfaces.append(name)
-                }
-
-                // Getting IP addr of current interface
-                if name == currentInterface, let addr = interface.ifa_addr {
-                    let addr = addr.pointee
-                    var hostname = [CChar](repeating: 0, count: Int(NI_MAXHOST))
-                    if addr.sa_family == sa_family_t(AF_INET) {
-                        if getnameinfo(
-                            interface.ifa_addr,
-                            socklen_t(addr.sa_len),
-                            &hostname,
-                            socklen_t(hostname.count),
-                            nil,
-                            socklen_t(0),
-                            NI_NUMERICHOST
-                        ) == 0 {
-                            ip_addr = String(cString: hostname)
-                        }
-                    }
-                }
-
-                // Filter for current interface
-                if name == currentInterface, let ifaData = interface.ifa_data {
-                    let data = ifaData.assumingMemoryBound(to: if_data.self)
-                        .pointee
-                    upload += data.ifi_obytes
-                    download += data.ifi_ibytes
-                }
+            if strcmp(interface.ifa_name, interfaceName) == 0,
+                let ifaData = interface.ifa_data
+            {
+                let data = ifaData.assumingMemoryBound(to: if_data.self)
+                    .pointee
+                upload += data.ifi_obytes
+                download += data.ifi_ibytes
             }
-            freeifaddrs(interfaceAddresses)
         }
 
         return (upload, download)
     }
+
     func getCurrentInterface() -> String {
         return currentInterface
     }
+
     func setCurrentInterface(_ name: String) {
         currentInterface = name
+        self.ip_addr = getIpAddress(for: name)
         reload = true
     }
 
