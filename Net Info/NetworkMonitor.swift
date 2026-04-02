@@ -18,9 +18,6 @@ class NetworkMonitor {
     @AppStorage("SelectedInterface") private var currentInterface = "en0"
     let buffer = NetworkSpeedBuffer(size: 60)
 
-    @Published
-    var ip_addr: String? = nil
-
     func startMonitoring(
         callback:
             @escaping (
@@ -76,7 +73,6 @@ class NetworkMonitor {
     }
 
     func getIpAddress(for interfaceName: String) -> String? {
-        print("ip addr requested")
         var interfaceAddresses: UnsafeMutablePointer<ifaddrs>? = nil
 
         guard getifaddrs(&interfaceAddresses) == 0 else { return nil }
@@ -160,7 +156,6 @@ class NetworkMonitor {
 
     func setCurrentInterface(_ name: String) {
         currentInterface = name
-        self.ip_addr = getIpAddress(for: name)
         reload = true
     }
 

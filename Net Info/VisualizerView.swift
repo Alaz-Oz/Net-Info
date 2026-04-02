@@ -17,9 +17,13 @@ struct VisualizerView: View {
                     .imageScale(.large)
                     .foregroundStyle(.tint)
 
-                Text(NetworkMonitor.shared.ip_addr ?? "Network Speed")
-                    .font(.headline)
-                    .padding()
+                Text(
+                    NetworkMonitor.shared.getIpAddress(
+                        for: NetworkMonitor.shared.getCurrentInterface()
+                    ) ?? "Network Speed"
+                )
+                .font(.headline)
+                .padding()
             }
 
             ChartView(data: buffer)

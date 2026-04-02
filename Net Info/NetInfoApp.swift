@@ -31,22 +31,22 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     }
 
     @objc func openVisualization() {
-        if visualizeWindow == nil {
-            // Making a new window
-            visualizeWindow = NSWindow(
-                contentRect: NSRect(x: 0, y: 0, width: 300, height: 200),
-                styleMask: [.closable, .titled, .miniaturizable],
-                backing: .buffered,
-                defer: false
-            )
-            visualizeWindow?.center()
-            visualizeWindow?.setFrameAutosaveName("Visuals")
-            visualizeWindow?.contentView = NSHostingView(
-                rootView: VisualizerView()
-            )
-            visualizeWindow?.title = "Visualizer"
-            visualizeWindow?.isReleasedWhenClosed = false
+        if let existingWindow = visualizeWindow {
+            existingWindow.close()
         }
+
+        visualizeWindow = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 300, height: 200),
+            styleMask: [.closable, .titled, .miniaturizable],
+            backing: .buffered,
+            defer: false
+        )
+        visualizeWindow?.center()
+        visualizeWindow?.setFrameAutosaveName("Visuals")
+        visualizeWindow?.contentView = NSHostingView(rootView: VisualizerView())
+        visualizeWindow?.title = "Visualizer"
+        visualizeWindow?.isReleasedWhenClosed = false
+        visualizeWindow?.delegate = self
 
         // Show the window
         visualizeWindow?.makeKeyAndOrderFront(nil)
@@ -55,20 +55,22 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     }
 
     @objc func openSettings() {
-        if settingsWindow == nil {
-            settingsWindow = NSWindow(
-                contentRect: NSRect(x: 0, y: 0, width: 300, height: 150),
-                styleMask: [.titled, .closable],
-                backing: .buffered,
-                defer: false
-            )
-            settingsWindow?.center()
-            settingsWindow?.title = "Settings"
-            settingsWindow?.contentView = NSHostingView(
-                rootView: SettingsView()
-            )
-            settingsWindow?.isReleasedWhenClosed = false
+        if let existingWindow = settingsWindow {
+            existingWindow.close()
         }
+
+        settingsWindow = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 300, height: 150),
+            styleMask: [.closable, .titled],
+            backing: .buffered,
+            defer: false
+        )
+        settingsWindow?.center()
+        settingsWindow?.title = "Settings"
+        settingsWindow?.contentView = NSHostingView(rootView: SettingsView())
+        settingsWindow?.isReleasedWhenClosed = false
+        settingsWindow?.delegate = self
+
         // Show the window
         settingsWindow?.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
@@ -108,12 +110,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             )
         )
         statusItem?.menu = menu
-        
+
         // Initial speed visuals
         statusItem.button?.attributedTitle =
             self.createAttributedString(
                 upload: NetworkMonitor.formatSpeed(0),
-                download:NetworkMonitor.formatSpeed(0)
+                download: NetworkMonitor.formatSpeed(0)
             )
 
         // Start monitoring the network speed
@@ -184,6 +186,16 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         )
 
         return combinedString
+    }
+
+    func windowWillClose(_ notification: Notification) {
+        if let closedWindow = notification.object as? NSWindow {
+            if closedWindow == visualizeWindow {
+                visualizeWindow = nil
+            } else if closedWindow == settingsWindow {
+                settingsWindow = nil
+            }
+        }
     }
 
 }
