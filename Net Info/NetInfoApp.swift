@@ -60,7 +60,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         }
 
         settingsWindow = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 300, height: 150),
+            contentRect: NSRect(x: 0, y: 0, width: 300, height: 300),
             styleMask: [.closable, .titled],
             backing: .buffered,
             defer: false

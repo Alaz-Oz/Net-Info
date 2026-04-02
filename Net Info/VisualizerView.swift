@@ -9,8 +9,8 @@ import Charts
 import SwiftUI
 
 struct VisualizerView: View {
-    @ObservedObject var buffer = NetworkMonitor.shared.buffer
-    @State var ipAddr = "Loading ..."
+    @ObservedObject var monitor = NetworkMonitor.shared
+//    @State var ipAddr = "Loading ..."
     var body: some View {
         VStack {
             HStack {
@@ -18,12 +18,12 @@ struct VisualizerView: View {
                     .imageScale(.large)
                     .foregroundStyle(.tint)
 
-                Text(ipAddr)
+                Text(monitor.ipAddr)
                     .font(.headline)
                     .padding()
             }
 
-            ChartView(data: buffer)
+            ChartView(data: monitor.buffer)
             Spacer()
         }
         .padding()
@@ -31,10 +31,10 @@ struct VisualizerView: View {
     }
 
     func refreshIP() {
-        let currentInterface = NetworkMonitor.shared.getCurrentInterface()
-        ipAddr =
-            NetworkMonitor.shared.getIpAddress(for: currentInterface)
-            ?? "Unknown"
+        let currentInterface = monitor.getCurrentInterface()
+        monitor.setCurrentInterface(currentInterface)
+//        monitor.ipAddr = NetworkMonitor.shared.getIpAddress(for: currentInterface)
+//            ?? "Unknown"
     }
 }
 
