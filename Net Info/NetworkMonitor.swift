@@ -94,8 +94,8 @@ class NetworkMonitor: ObservableObject {
 
             let data = ifaData.assumingMemoryBound(to: if_data.self)
                 .pointee
-            upload += data.ifi_obytes
-            download += data.ifi_ibytes
+            upload &+= data.ifi_obytes
+            download &+= data.ifi_ibytes
         }
 
         return (upload, download)
