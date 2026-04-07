@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import SystemConfiguration
 
 class NetworkMonitor: ObservableObject {
     static let shared = NetworkMonitor()

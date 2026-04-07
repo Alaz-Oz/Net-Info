@@ -29,8 +29,6 @@ struct VisualizerView: View {
         }
         .padding()
     }
-
-
 }
 
 struct ChartView: View {
@@ -75,7 +73,6 @@ struct ChartView: View {
             "Download": .blue,
         ])
         .frame(width: 600, height: 200)
-
     }
 }
 
