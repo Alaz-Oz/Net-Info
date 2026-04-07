@@ -82,10 +82,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             withLength: NSStatusItem.variableLength
         )
 
-        if let button = statusItem?.button {
-            button.alignment = .right
-        }
-
         let menu = NSMenu()
         menu.addItem(
             NSMenuItem(
@@ -111,30 +107,31 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         )
         statusItem?.menu = menu
 
-        // Initial speed visuals
-        statusItem.button?.attributedTitle =
-            self.createAttributedString(
-                upload: NetworkMonitor.formatSpeed(0),
-                download: NetworkMonitor.formatSpeed(0)
-            )
+        if let button = statusItem?.button {
+            // Initial speed visuals
+            button.attributedTitle =
+                self.createAttributedString(
+                    upload: NetworkMonitor.formatSpeed(0),
+                    download: NetworkMonitor.formatSpeed(0)
+                )
+        }
 
         // Start monitoring the network speed
         NetworkMonitor.shared.startMonitoring {
             uploadBytesPerSec,
             downloadBytesPerSec in
-            DispatchQueue.main.async {
 
-                if self.prevBPS.0 != uploadBytesPerSec
-                    || self.prevBPS.1 != downloadBytesPerSec
-                {
-                    // Update needed
-                    let uploadSpeed = NetworkMonitor.formatSpeed(
-                        uploadBytesPerSec
-                    )
-                    let downloadSpeed = NetworkMonitor.formatSpeed(
-                        downloadBytesPerSec
-                    )
-
+            if self.prevBPS.0 != uploadBytesPerSec
+                || self.prevBPS.1 != downloadBytesPerSec
+            {
+                // Update needed
+                let uploadSpeed = NetworkMonitor.formatSpeed(
+                    uploadBytesPerSec
+                )
+                let downloadSpeed = NetworkMonitor.formatSpeed(
+                    downloadBytesPerSec
+                )
+                DispatchQueue.main.async {
                     self.statusItem.button?.attributedTitle =
                         self.createAttributedString(
                             upload: uploadSpeed,
