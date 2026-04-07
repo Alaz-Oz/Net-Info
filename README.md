@@ -7,7 +7,7 @@ A small utility that shows network speed in the Mac's menubar.
 
 ## Installation
 **Step 1:**
-Download the latest version from the [Releases](https://github.com/Alaz-Oz/Net-Info/releases).<br>
+Download the latest version from [here](https://github.com/Alaz-Oz/Net-Info/releases/latest).<br>
 
 **Step 2:**
 Unzip the downloaded item
