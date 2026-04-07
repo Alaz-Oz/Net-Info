@@ -10,7 +10,8 @@ import SwiftUI
 
 struct VisualizerView: View {
     @ObservedObject var monitor = NetworkMonitor.shared
-//    @State var ipAddr = "Loading ..."
+    @ObservedObject var ipMonitor = ActiveIPMonitor()
+
     var body: some View {
         VStack {
             HStack {
@@ -18,7 +19,7 @@ struct VisualizerView: View {
                     .imageScale(.large)
                     .foregroundStyle(.tint)
 
-                Text(monitor.ipAddr)
+                Text(ipMonitor.ipAddr)
                     .font(.headline)
                     .padding()
             }
@@ -27,15 +28,9 @@ struct VisualizerView: View {
             Spacer()
         }
         .padding()
-        .onAppear { refreshIP() }
     }
 
-    func refreshIP() {
-        let currentInterface = monitor.getCurrentInterface()
-        monitor.setCurrentInterface(currentInterface)
-//        monitor.ipAddr = NetworkMonitor.shared.getIpAddress(for: currentInterface)
-//            ?? "Unknown"
-    }
+
 }
 
 struct ChartView: View {
