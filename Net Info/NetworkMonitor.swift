@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-class NetworkMonitor {
+class NetworkMonitor: ObservableObject {
     static let shared = NetworkMonitor()
     private var timer: Timer?
     private var reload = true
@@ -15,13 +15,7 @@ class NetworkMonitor {
     private var previousUpload: UInt32 = 0
     private var previousDownload: UInt32 = 0
 
-    @AppStorage("SelectedInterface") private var currentInterface = "en0"
     let buffer = NetworkSpeedBuffer(size: 60)
-
-    var availableInterfaces: [String] = []
-
-    @Published
-    var ip_addr: String? = nil
 
     func startMonitoring(
         callback:
@@ -52,13 +46,19 @@ class NetworkMonitor {
                 curr: download,
                 pre: self.previousDownload
             )
-            self.buffer.push(uploadBytesPerSecond, downloadBytesPerSecond)
+            self.buffer.push(
+                uploadBytesPerSecond,
+                downloadBytesPerSecond
+            )
             // Update previous values for next calculation
             self.previousUpload = upload
             self.previousDownload = download
 
             // Pass formatted strings to the callback
-            callback(uploadBytesPerSecond, downloadBytesPerSecond)
+            callback(
+                uploadBytesPerSecond,
+                downloadBytesPerSecond
+            )
         }
     }
 
@@ -71,60 +71,33 @@ class NetworkMonitor {
 
     func getNetworkData() -> (UInt32, UInt32) {
         var interfaceAddresses: UnsafeMutablePointer<ifaddrs>? = nil
+        guard getifaddrs(&interfaceAddresses) == 0 else { return (0, 0) }
+        defer { freeifaddrs(interfaceAddresses) }
+
         var upload: UInt32 = 0
         var download: UInt32 = 0
 
-        // Get network interfaces
-        if getifaddrs(&interfaceAddresses) == 0 {
-            var pointer = interfaceAddresses
-            while pointer != nil {
-                defer { pointer = pointer?.pointee.ifa_next }
+        var pointer = interfaceAddresses
+        while let interface = pointer?.pointee {
+            defer { pointer = interface.ifa_next }
+            let flags = Int32(interface.ifa_flags)
 
-                let interface = pointer!.pointee
-                let name = String(cString: interface.ifa_name)
+            guard (flags & IFF_RUNNING) != 0, (flags & IFF_LOOPBACK) == 0,
+                let addr = interface.ifa_addr,
+                addr.pointee.sa_family == AF_LINK,
+                let name = interface.ifa_name,
+                name[0] == UInt8(ascii: "e"),
+                name[1] == UInt8(ascii: "n"),
+                let ifaData = interface.ifa_data
+            else { continue }
 
-                if name.hasPrefix("en"), !availableInterfaces.contains(name) {
-                    availableInterfaces.append(name)
-                }
-
-                // Getting IP addr of current interface
-                if name == currentInterface, let addr = interface.ifa_addr {
-                    let addr = addr.pointee
-                    var hostname = [CChar](repeating: 0, count: Int(NI_MAXHOST))
-                    if addr.sa_family == sa_family_t(AF_INET) {
-                        if getnameinfo(
-                            interface.ifa_addr,
-                            socklen_t(addr.sa_len),
-                            &hostname,
-                            socklen_t(hostname.count),
-                            nil,
-                            socklen_t(0),
-                            NI_NUMERICHOST
-                        ) == 0 {
-                            ip_addr = String(cString: hostname)
-                        }
-                    }
-                }
-
-                // Filter for current interface
-                if name == currentInterface, let ifaData = interface.ifa_data {
-                    let data = ifaData.assumingMemoryBound(to: if_data.self)
-                        .pointee
-                    upload += data.ifi_obytes
-                    download += data.ifi_ibytes
-                }
-            }
-            freeifaddrs(interfaceAddresses)
+            let data = ifaData.assumingMemoryBound(to: if_data.self)
+                .pointee
+            upload &+= data.ifi_obytes
+            download &+= data.ifi_ibytes
         }
 
         return (upload, download)
-    }
-    func getCurrentInterface() -> String {
-        return currentInterface
-    }
-    func setCurrentInterface(_ name: String) {
-        currentInterface = name
-        reload = true
     }
 
     // Helper function to format speed with units

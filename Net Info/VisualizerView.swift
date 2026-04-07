@@ -9,7 +9,9 @@ import Charts
 import SwiftUI
 
 struct VisualizerView: View {
-    @ObservedObject var buffer = NetworkMonitor.shared.buffer
+    @ObservedObject var monitor = NetworkMonitor.shared
+    @ObservedObject var ipMonitor = ActiveIPMonitor()
+
     var body: some View {
         VStack {
             HStack {
@@ -17,12 +19,12 @@ struct VisualizerView: View {
                     .imageScale(.large)
                     .foregroundStyle(.tint)
 
-                Text(NetworkMonitor.shared.ip_addr ?? "Network Speed")
+                Text(ipMonitor.ipAddr)
                     .font(.headline)
                     .padding()
             }
 
-            ChartView(data: buffer)
+            ChartView(data: monitor.buffer)
             Spacer()
         }
         .padding()
@@ -71,7 +73,6 @@ struct ChartView: View {
             "Download": .blue,
         ])
         .frame(width: 600, height: 200)
-
     }
 }
 
